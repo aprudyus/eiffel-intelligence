@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -29,6 +30,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
 @Component
+@CrossOrigin
 @Api(value = "subscription", description = "The Subscription API for the store and retrieve the subscriptions from the database")
 public class SubscriptionControllerImpl implements SubscriptionController {
     
@@ -38,10 +40,11 @@ public class SubscriptionControllerImpl implements SubscriptionController {
     private static final Logger LOG = LoggerFactory.getLogger(SubscriptionControllerImpl.class);
     
     @Override
+    @CrossOrigin
     @ApiOperation(value = "Creates the subscription")
     public ResponseEntity<SubscriptionResponse> createSubscription(@RequestBody Subscription subscription) {
         SubscriptionResponse subscriptionResponse = new SubscriptionResponse();
-        if (!subscriptionService.isDuplicatedSubscription(subscription.getSubscriptionName())) {
+        if (!subscriptionService.doSubscriptionExist(subscription.getSubscriptionName())) {
             subscriptionService.addSubscription(subscription);
             LOG.info("Subscription :" + subscription.getSubscriptionName() + " Inserted Successfully");
             subscriptionResponse.setMsg("Inserted Successfully"); subscriptionResponse.setStatusCode(HttpStatus.OK.value());
@@ -55,6 +58,7 @@ public class SubscriptionControllerImpl implements SubscriptionController {
     }
     
     @Override
+    @CrossOrigin
     @ApiOperation(value = "Returns the subscription rules for given subscription name")
     public ResponseEntity<Subscription> getSubscriptionById(@PathVariable String subscriptionName) {
         Subscription subscription = null;
@@ -71,25 +75,27 @@ public class SubscriptionControllerImpl implements SubscriptionController {
     }
     
     @Override
+    @CrossOrigin
     @ApiOperation(value = "Update the existing subscription by the subscription name")
     public ResponseEntity<SubscriptionResponse> updateSubscriptionById(@PathVariable String subscriptionName, @RequestBody Subscription subscription) {
         LOG.info("Subscription :" + subscriptionName + " update started");
         SubscriptionResponse subscriptionResponse = new SubscriptionResponse();
-        if (!subscriptionService.isDuplicatedSubscription(subscription.getSubscriptionName())) {
+        if (subscriptionService.doSubscriptionExist(subscription.getSubscriptionName())) {
             subscriptionService.modifySubscription(subscription, subscriptionName);
             LOG.info("Subscription :" + subscriptionName + " update completed");
             subscriptionResponse.setMsg("Updated Successfully"); subscriptionResponse.setStatusCode(HttpStatus.OK.value());
             return new ResponseEntity<SubscriptionResponse>(subscriptionResponse, HttpStatus.OK);
             
         } else {
-            LOG.error("Subscription :" + subscription.getSubscriptionName() + " identified as duplicate subscription");
-            subscriptionResponse.setMsg("Duplicate Subscription"); subscriptionResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
+            LOG.error("Subscription :" + subscription.getSubscriptionName() + " can't be found.");
+            subscriptionResponse.setMsg("Subscription can't be found"); subscriptionResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
             return new ResponseEntity<SubscriptionResponse>(subscriptionResponse, HttpStatus.BAD_REQUEST);
         }
         
     }
     
     @Override
+    @CrossOrigin
     @ApiOperation(value = "Removes the subscription from the database")
     public ResponseEntity<SubscriptionResponse> deleteSubscriptionById(@PathVariable String subscriptionName) {
         SubscriptionResponse subscriptionResponse = new SubscriptionResponse();
@@ -107,6 +113,7 @@ public class SubscriptionControllerImpl implements SubscriptionController {
     }
     
     @Override
+    @CrossOrigin
     @ApiOperation(value = "Retrieve all the subscriptions")
     public ResponseEntity<List<Subscription>> getSubscriptions() {
         LOG.info("Subscription : get all records started");
