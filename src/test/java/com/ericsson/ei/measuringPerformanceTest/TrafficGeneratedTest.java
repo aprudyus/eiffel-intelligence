@@ -186,10 +186,11 @@ public class TrafficGeneratedTest {
             String expectedDocument = FileUtils.readFileToString(new File(inputFilePath));
             ObjectMapper objectmapper = new ObjectMapper();
             JsonNode expectedJson = objectmapper.readTree(expectedDocument);
+
             for (int i = 0; i < EVENT_PACKAGES; i++) {
-                String document = objectHandler.findObjectById("6acc3c87-75e0-4b6d-88f5-b1a5d4".concat(String.format("%06d", i)));
+                String document = objectHandler.findObjectById("6acc3c87-75e0-4b6d-88f5-".concat(String.format("%06d", i)));
                 JsonNode actualJson = objectmapper.readTree(document);
-                assertEquals(expectedJson.size(), actualJson.size());
+                assertEquals(expectedJson.toString().length(), actualJson.toString().length());
             }
             log.info(diffTime / 60000 + "m " + (diffTime / 1000) % 60 + "s " + diffTime % 1000);
 
@@ -228,11 +229,13 @@ public class TrafficGeneratedTest {
         for (int i = 0; i < EVENT_PACKAGES; i++) {
             for(String eventName : eventNames) {
                 JsonNode eventJson = parsedJason.get(eventName);
-                newID = eventJson.at("/meta/id").textValue().substring(0, 30).concat(String.format("%06d", i));;
+                String metaId = eventJson.at("/meta/id").textValue();
+                newID = metaId.substring(0, metaId.length() - 6).concat(String.format("%06d", i));;
                 ((ObjectNode) eventJson.path("meta")).put("id", newID);
                 for (JsonNode link : eventJson.path("links")) {
                     if (link.has("target")) {
-                        newID = link.path("target").textValue().substring(0, 30).concat(String.format("%06d", i));
+                        String target = link.path("target").textValue();
+                        newID = target.substring(0, target.length() - 6).concat(String.format("%06d", i));
                         ((ObjectNode) link).put("target", newID);
                     }
                 }
